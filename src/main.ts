@@ -33,7 +33,7 @@ async function run(): Promise<void> {
 
 type OctokitReturnType = ReturnType<typeof github.getOctokit>
 function getOctokit(): OctokitReturnType {
-  const token = core.getInput('token')
+  const token = core.getInput('github-token')
   return github.getOctokit(token)
 }
 

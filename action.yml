@@ -12,6 +12,10 @@ inputs:
     description: |
       The unit of time to base amount on. Either 'h' for hours or 'd' for days.
     default: "h"
+  github-token:
+    description: A Github token to use to look at the PRs.
+    required: false
+    default: ${{ github.token }}
 runs:
   using: 'node16'
   main: 'dist/index.js'
