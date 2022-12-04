@@ -1,11 +1,17 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Code Review Later'
+description: 'Github Action to blocks PRs if closed PRs have not been reviewed in a certain period of time.'
+author: 'jakeyheath'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  amount:
+    required: false
+    description: |
+      The amount of units to require PRs be code reviewed by.
+    default: "5"
+  unit:
+    required: false
+    description: |
+      The unit of time to base amount on. Either 'h' for hours or 'd' for days.
+    default: "h"
 runs:
   using: 'node16'
   main: 'dist/index.js'
