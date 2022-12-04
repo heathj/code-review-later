@@ -76,7 +76,7 @@ function run() {
     });
 }
 function getOctokit() {
-    const token = core.getInput('token');
+    const token = core.getInput('github-token');
     return github.getOctokit(token);
 }
 function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
