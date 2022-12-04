@@ -20,7 +20,7 @@ async function run(): Promise<void> {
 
     const {owner, repo} = github.context.repo
     const unreviewedPRs = await getUnreviewedPRsSince(owner, repo, amount, unit)
-    if (unreviewedPRs.length >= 0) {
+    if (unreviewedPRs.length > 0) {
       core.info(
         `The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.id))}`
       )

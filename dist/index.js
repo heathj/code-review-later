@@ -64,7 +64,7 @@ function run() {
             }
             const { owner, repo } = github.context.repo;
             const unreviewedPRs = yield getUnreviewedPRsSince(owner, repo, amount, unit);
-            if (unreviewedPRs.length >= 0) {
+            if (unreviewedPRs.length > 0) {
                 core.info(`The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.id))}`);
                 core.setFailed('There are closed PRs that need code review');
             }
