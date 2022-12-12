@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
+import async from 'async'
 import moment from 'moment'
 
 async function run(): Promise<void> {
@@ -66,42 +67,39 @@ async function getUnreviewedPRsSince(
   )
 
   for await (const pulls of pullsPages) {
-    const unreviewedPage = await Promise.all(
-      pulls.data.filter(async p => {
-        if (!p.merged_at) {
-          core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`)
-          return false
-        }
+    const unreviewedPage = await async.filter(pulls.data, async p => {
+      if (!p.merged_at) {
+        core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`)
+        return false
+      }
 
-        if (!isNowAfter(p.merged_at, amount, unit)) {
-          core.debug(`PR ${p.url} was less than ${amount} ${unit} ago`)
-          return false
-        }
+      if (!isNowAfter(p.merged_at, amount, unit)) {
+        core.debug(`PR ${p.url} was less than ${amount} ${unit} ago`)
+        return false
+      }
 
-        const reviewsPages = config.octokit.paginate.iterator(
-          config.octokit.rest.pulls.listReviews,
-          {
-            owner,
-            repo,
-            pull_number: p.number
-          }
-        )
-        let totalReviews = 0
-        for await (const reviews of reviewsPages) {
-          totalReviews += reviews.data.length
+      const reviewsPages = config.octokit.paginate.iterator(
+        config.octokit.rest.pulls.listReviews,
+        {
+          owner,
+          repo,
+          pull_number: p.number
         }
-        if (totalReviews > 0) {
-          core.debug(`PR ${p.url} had ${totalReviews} reviews`)
-          return false
-        }
-        core.info(`returning true ${p.url}`)
-        return true
-      })
-    )
+      )
+      let totalReviews = 0
+      for await (const reviews of reviewsPages) {
+        totalReviews += reviews.data.length
+      }
+      if (totalReviews > 0) {
+        core.debug(`PR ${p.url} had ${totalReviews} reviews`)
+        return false
+      }
+      return true
+    })
 
-    core.info(`returning true ${unreviewedPage.map(p => p.url)}`)
     unreviewed = [...unreviewed, ...unreviewedPage]
   }
+
   return unreviewed
 }
 
