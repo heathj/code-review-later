@@ -85,34 +85,63 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
     var e_1, _a;
     return __awaiter(this, void 0, void 0, function* () {
         let unreviewed = [];
-        const iter = config.octokit.paginate.iterator(config.octokit.rest.pulls.list, {
+        const pullsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.list, {
             owner,
             repo,
             state: 'closed'
         });
         try {
-            for (var iter_1 = __asyncValues(iter), iter_1_1; iter_1_1 = yield iter_1.next(), !iter_1_1.done;) {
-                const pulls = iter_1_1.value;
-                const old = pulls.data.filter(p => {
+            for (var pullsPages_1 = __asyncValues(pullsPages), pullsPages_1_1; pullsPages_1_1 = yield pullsPages_1.next(), !pullsPages_1_1.done;) {
+                const pulls = pullsPages_1_1.value;
+                const unreviewedPage = yield Promise.all(pulls.data.filter((p) => __awaiter(this, void 0, void 0, function* () {
+                    var e_2, _b;
                     if (!p.merged_at) {
+                        core.debug(`PR has no merged_at field: ${JSON.stringify(p)}`);
                         return false;
                     }
-                    return isDeltaAfterNow(p.merged_at, amount, unit);
-                });
-                unreviewed = [...unreviewed, ...old];
+                    if (!isAfterNow(p.merged_at, amount, unit)) {
+                        core.debug(`PR was merged less than ${amount} ${unit} ago`);
+                        return false;
+                    }
+                    const reviewsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.listReviewComments, {
+                        owner,
+                        repo,
+                        pull_number: p.id
+                    });
+                    let totalReviews = 0;
+                    try {
+                        for (var reviewsPages_1 = __asyncValues(reviewsPages), reviewsPages_1_1; reviewsPages_1_1 = yield reviewsPages_1.next(), !reviewsPages_1_1.done;) {
+                            const reviews = reviewsPages_1_1.value;
+                            totalReviews += reviews.data.length;
+                        }
+                    }
+                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                    finally {
+                        try {
+                            if (reviewsPages_1_1 && !reviewsPages_1_1.done && (_b = reviewsPages_1.return)) yield _b.call(reviewsPages_1);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                    }
+                    if (totalReviews > 0) {
+                        core.debug(`PR had ${totalReviews} reviews`);
+                        return false;
+                    }
+                    return true;
+                })));
+                unreviewed = [...unreviewed, ...unreviewedPage];
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (iter_1_1 && !iter_1_1.done && (_a = iter_1.return)) yield _a.call(iter_1);
+                if (pullsPages_1_1 && !pullsPages_1_1.done && (_a = pullsPages_1.return)) yield _a.call(pullsPages_1);
             }
             finally { if (e_1) throw e_1.error; }
         }
         return unreviewed;
     });
 }
-function isDeltaAfterNow(a, amount, unit) {
+function isAfterNow(a, amount, unit) {
     const now = (0, moment_1.default)();
     const then = (0, moment_1.default)(a);
     then.add(amount, unit);
