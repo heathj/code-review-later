@@ -1,6 +1,10 @@
-Code review PRs later
+# Code Review Later
 
-Add the following as a required check on PRs to make sure all PRs are code reviewed within a time frame. It will fail if a PR needs to be reviewed. Defaults are PRs needs to be reviewed every [5 hours](https://github.com/heathj/code-review-later/blob/main/action.yml)
+Code review PRs later.
+
+## Setup
+
+Add the following Github ACtion as a required check on PRs to make sure all PRs are code reviewed within a time frame. It will fail if a PR needs to be reviewed. Defaults are PRs needs to be reviewed every [5 hours](https://github.com/heathj/code-review-later/blob/main/action.yml)
 
 ~~~yaml
 on: 'push'
