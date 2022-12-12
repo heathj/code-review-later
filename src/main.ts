@@ -98,6 +98,8 @@ async function getUnreviewedPRsSince(
         return true
       })
     )
+
+    core.info(`returning true ${unreviewedPage.map(p => p.url)}`)
     unreviewed = [...unreviewed, ...unreviewedPage]
   }
   return unreviewed
