@@ -53,9 +53,10 @@ async function getUnreviewedPRsSince(
 ): Promise<
   GetResponseDataTypeFromEndpointMethod<typeof config.octokit.rest.pulls.list>
 > {
-  let unreviewed: GetResponseDataTypeFromEndpointMethod<
+  type pullListType = GetResponseDataTypeFromEndpointMethod<
     typeof config.octokit.rest.pulls.list
-  > = []
+  >
+  let unreviewed: pullListType = []
 
   const pullsPages = config.octokit.paginate.iterator(
     config.octokit.rest.pulls.list,
@@ -67,41 +68,46 @@ async function getUnreviewedPRsSince(
   )
 
   for await (const pulls of pullsPages) {
-    const unreviewedPage = await async.filter(pulls.data, async p => {
-      if (!p.merged_at) {
-        core.debug(`PR ${p.url} has no merged_at field`)
-        return false
-      }
-
-      if (!isNowAfter(p.merged_at, amount, unit)) {
-        core.debug(`PR ${p.url} was less than ${amount} ${unit} ago`)
-        return false
-      }
-
-      const reviewsPages = config.octokit.paginate.iterator(
-        config.octokit.rest.pulls.listReviews,
-        {
-          owner,
-          repo,
-          pull_number: p.number
+    const u = await Promise.all(
+      pulls.data.map(async p => {
+        if (!p.merged_at) {
+          core.debug(`PR ${p.url} has no merged_at field`)
+          return null
         }
-      )
-      let totalReviews = 0
-      for await (const reviews of reviewsPages) {
-        totalReviews += reviews.data.length
-      }
-      if (totalReviews > 0) {
-        core.debug(`PR ${p.url} had ${totalReviews} reviews`)
-        return false
-      }
-      core.debug(`returned true ${p.url}`)
-      return true
-    })
-    core.debug(`here after await ${unreviewedPage}`)
-    unreviewed = [...unreviewed, ...unreviewedPage]
+
+        if (!isNowAfter(p.merged_at, amount, unit)) {
+          core.debug(`PR ${p.url} was less than ${amount} ${unit} ago`)
+          return null
+        }
+
+        const reviewsPages = config.octokit.paginate.iterator(
+          config.octokit.rest.pulls.listReviews,
+          {
+            owner,
+            repo,
+            pull_number: p.number
+          }
+        )
+        let totalReviews = 0
+        for await (const reviews of reviewsPages) {
+          totalReviews += reviews.data.length
+        }
+        if (totalReviews > 0) {
+          core.debug(`PR ${p.url} had ${totalReviews} reviews`)
+          return null
+        }
+        core.debug(`returned true ${p.url}`)
+        return p
+      })
+    )
+    unreviewed = [...unreviewed, ...u.filter(isNotNull)]
   }
 
   return unreviewed
+}
+
+function isNotNull<T>(argument: T | null): argument is T {
+  return argument !== null
 }
 
 function isNowAfter(a: string, amount: number, unit: 'h' | 'd'): boolean {
