@@ -69,12 +69,12 @@ async function getUnreviewedPRsSince(
     const unreviewedPage = await Promise.all(
       pulls.data.filter(async p => {
         if (!p.merged_at) {
-          core.debug(`PR has no merged_at field: ${JSON.stringify(p)}`)
+          core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`)
           return false
         }
 
-        if (!isAfterNow(p.merged_at, amount, unit)) {
-          core.debug(`PR was merged less than ${amount} ${unit} ago`)
+        if (!isNowAfter(p.merged_at, amount, unit)) {
+          core.debug(`PR ${p.url} was merged more than ${amount} ${unit} ago`)
           return false
         }
 
@@ -91,7 +91,7 @@ async function getUnreviewedPRsSince(
           totalReviews += reviews.data.length
         }
         if (totalReviews > 0) {
-          core.debug(`PR had ${totalReviews} reviews`)
+          core.debug(`PR ${p.url} had ${totalReviews} reviews`)
           return false
         }
         return true
@@ -102,11 +102,10 @@ async function getUnreviewedPRsSince(
   return unreviewed
 }
 
-function isAfterNow(a: string, amount: number, unit: 'h' | 'd'): boolean {
+function isNowAfter(a: string, amount: number, unit: 'h' | 'd'): boolean {
   const now = moment()
-  const then = moment(a)
-  then.add(amount, unit)
-  return then.isSameOrAfter(now)
+  const then = moment(a).add(amount, unit)
+  return now.isSameOrAfter(then)
 }
 
 run()
