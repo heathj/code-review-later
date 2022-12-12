@@ -54,7 +54,7 @@ async function getUnreviewedPRsSince(
     typeof config.octokit.rest.pulls.list
   > = []
 
-  const iter = config.octokit.paginate.iterator(
+  const pullsPages = config.octokit.paginate.iterator(
     config.octokit.rest.pulls.list,
     {
       owner,
@@ -63,19 +63,44 @@ async function getUnreviewedPRsSince(
     }
   )
 
-  for await (const pulls of iter) {
-    const old = pulls.data.filter(p => {
-      if (!p.merged_at) {
-        return false
-      }
-      return isDeltaAfterNow(p.merged_at, amount, unit)
-    })
-    unreviewed = [...unreviewed, ...old]
+  for await (const pulls of pullsPages) {
+    const unreviewedPage = await Promise.all(
+      pulls.data.filter(async p => {
+        if (!p.merged_at) {
+          core.debug(`PR has no merged_at field: ${JSON.stringify(p)}`)
+          return false
+        }
+
+        if (!isAfterNow(p.merged_at, amount, unit)) {
+          core.debug(`PR was merged less than ${amount} ${unit} ago`)
+          return false
+        }
+
+        const reviewsPages = config.octokit.paginate.iterator(
+          config.octokit.rest.pulls.listReviewComments,
+          {
+            owner,
+            repo,
+            pull_number: p.id
+          }
+        )
+        let totalReviews = 0
+        for await (const reviews of reviewsPages) {
+          totalReviews += reviews.data.length
+        }
+        if (totalReviews > 0) {
+          core.debug(`PR had ${totalReviews} reviews`)
+          return false
+        }
+        return true
+      })
+    )
+    unreviewed = [...unreviewed, ...unreviewedPage]
   }
   return unreviewed
 }
 
-function isDeltaAfterNow(a: string, amount: number, unit: 'h' | 'd'): boolean {
+function isAfterNow(a: string, amount: number, unit: 'h' | 'd'): boolean {
   const now = moment()
   const then = moment(a)
   then.add(amount, unit)
