@@ -126,6 +126,7 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                         core.debug(`PR ${p.url} had ${totalReviews} reviews`);
                         return false;
                     }
+                    core.info(`returning true ${p.url}`);
                     return true;
                 })));
                 unreviewed = [...unreviewed, ...unreviewedPage];

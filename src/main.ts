@@ -94,6 +94,7 @@ async function getUnreviewedPRsSince(
           core.debug(`PR ${p.url} had ${totalReviews} reviews`)
           return false
         }
+        core.info(`returning true ${p.url}`)
         return true
       })
     )
