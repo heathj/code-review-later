@@ -96,11 +96,11 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                 const unreviewedPage = yield Promise.all(pulls.data.filter((p) => __awaiter(this, void 0, void 0, function* () {
                     var e_2, _b;
                     if (!p.merged_at) {
-                        core.debug(`PR has no merged_at field: ${JSON.stringify(p)}`);
+                        core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`);
                         return false;
                     }
-                    if (!isAfterNow(p.merged_at, amount, unit)) {
-                        core.debug(`PR was merged less than ${amount} ${unit} ago`);
+                    if (!isNowAfter(p.merged_at, amount, unit)) {
+                        core.debug(`PR ${p.url} was merged more than ${amount} ${unit} ago`);
                         return false;
                     }
                     const reviewsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.listReviewComments, {
@@ -123,7 +123,7 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                         finally { if (e_2) throw e_2.error; }
                     }
                     if (totalReviews > 0) {
-                        core.debug(`PR had ${totalReviews} reviews`);
+                        core.debug(`PR ${p.url} had ${totalReviews} reviews`);
                         return false;
                     }
                     return true;
@@ -141,11 +141,10 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
         return unreviewed;
     });
 }
-function isAfterNow(a, amount, unit) {
+function isNowAfter(a, amount, unit) {
     const now = (0, moment_1.default)();
-    const then = (0, moment_1.default)(a);
-    then.add(amount, unit);
-    return then.isSameOrAfter(now);
+    const then = (0, moment_1.default)(a).add(amount, unit);
+    return now.isSameOrAfter(then);
 }
 run();
 
