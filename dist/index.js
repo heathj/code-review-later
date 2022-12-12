@@ -54,7 +54,7 @@ function run() {
             const amountStr = core.getInput('amount');
             const amount = parseInt(amountStr, 10);
             if (isNaN(amount)) {
-                core.setFailed('invalid minCodeReviewTime, please set to number');
+                core.setFailed('invalid amount, please set to number');
                 return;
             }
             const unit = core.getInput('unit');
@@ -65,7 +65,7 @@ function run() {
             const { owner, repo } = github.context.repo;
             const unreviewedPRs = yield getUnreviewedPRsSince(owner, repo, amount, unit);
             if (unreviewedPRs.length > 0) {
-                core.info(`The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.number))}`);
+                core.info(`The unreviewed PRs older than ${amount} ${unit}: ${JSON.stringify(unreviewedPRs.map(u => u.url))}`);
                 core.setFailed('There are closed PRs that need code review');
             }
         }

@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {GetResponseDataTypeFromEndpointMethod} from '@octokit/types'
-import async from 'async'
 import moment from 'moment'
 
 async function run(): Promise<void> {
@@ -9,7 +8,7 @@ async function run(): Promise<void> {
     const amountStr = core.getInput('amount')
     const amount = parseInt(amountStr, 10)
     if (isNaN(amount)) {
-      core.setFailed('invalid minCodeReviewTime, please set to number')
+      core.setFailed('invalid amount, please set to number')
       return
     }
 
@@ -23,8 +22,8 @@ async function run(): Promise<void> {
     const unreviewedPRs = await getUnreviewedPRsSince(owner, repo, amount, unit)
     if (unreviewedPRs.length > 0) {
       core.info(
-        `The unreviewed PRs: ${JSON.stringify(
-          unreviewedPRs.map(u => u.number)
+        `The unreviewed PRs older than ${amount} ${unit}: ${JSON.stringify(
+          unreviewedPRs.map(u => u.url)
         )}`
       )
       core.setFailed('There are closed PRs that need code review')
