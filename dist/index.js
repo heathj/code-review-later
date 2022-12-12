@@ -100,10 +100,10 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                         return false;
                     }
                     if (!isNowAfter(p.merged_at, amount, unit)) {
-                        core.debug(`PR ${p.url} was merged more than ${amount} ${unit} ago`);
+                        core.debug(`PR ${p.url} was less than ${amount} ${unit} ago`);
                         return false;
                     }
-                    const reviewsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.listReviewComments, {
+                    const reviewsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.listReviews, {
                         owner,
                         repo,
                         pull_number: p.number
