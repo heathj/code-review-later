@@ -97,7 +97,7 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                 const unreviewedPage = yield async_1.default.filter(pulls.data, (p) => __awaiter(this, void 0, void 0, function* () {
                     var e_2, _b;
                     if (!p.merged_at) {
-                        core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`);
+                        core.debug(`PR ${p.url} has no merged_at field`);
                         return false;
                     }
                     if (!isNowAfter(p.merged_at, amount, unit)) {
@@ -130,6 +130,7 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                     core.debug(`returned true ${p.url}`);
                     return true;
                 }));
+                core.debug(`here after await ${unreviewedPage}`);
                 unreviewed = [...unreviewed, ...unreviewedPage];
             }
         }
