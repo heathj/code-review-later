@@ -65,7 +65,7 @@ function run() {
             const { owner, repo } = github.context.repo;
             const unreviewedPRs = yield getUnreviewedPRsSince(owner, repo, amount, unit);
             if (unreviewedPRs.length > 0) {
-                core.info(`The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.id))}`);
+                core.info(`The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.number))}`);
                 core.setFailed('There are closed PRs that need code review');
             }
         }
@@ -106,7 +106,7 @@ function getUnreviewedPRsSince(owner, repo, amount = 5, unit = 'h', config = {
                     const reviewsPages = config.octokit.paginate.iterator(config.octokit.rest.pulls.listReviewComments, {
                         owner,
                         repo,
-                        pull_number: p.id
+                        pull_number: p.number
                     });
                     let totalReviews = 0;
                     try {

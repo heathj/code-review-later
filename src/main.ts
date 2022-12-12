@@ -22,7 +22,9 @@ async function run(): Promise<void> {
     const unreviewedPRs = await getUnreviewedPRsSince(owner, repo, amount, unit)
     if (unreviewedPRs.length > 0) {
       core.info(
-        `The unreviewed PRs: ${JSON.stringify(unreviewedPRs.map(u => u.id))}`
+        `The unreviewed PRs: ${JSON.stringify(
+          unreviewedPRs.map(u => u.number)
+        )}`
       )
       core.setFailed('There are closed PRs that need code review')
     }
@@ -81,7 +83,7 @@ async function getUnreviewedPRsSince(
           {
             owner,
             repo,
-            pull_number: p.id
+            pull_number: p.number
           }
         )
         let totalReviews = 0
