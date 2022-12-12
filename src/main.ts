@@ -69,7 +69,7 @@ async function getUnreviewedPRsSince(
   for await (const pulls of pullsPages) {
     const unreviewedPage = await async.filter(pulls.data, async p => {
       if (!p.merged_at) {
-        core.debug(`PR ${p.url} has no merged_at field: ${JSON.stringify(p)}`)
+        core.debug(`PR ${p.url} has no merged_at field`)
         return false
       }
 
@@ -97,7 +97,7 @@ async function getUnreviewedPRsSince(
       core.debug(`returned true ${p.url}`)
       return true
     })
-
+    core.debug(`here after await ${unreviewedPage}`)
     unreviewed = [...unreviewed, ...unreviewedPage]
   }
 
